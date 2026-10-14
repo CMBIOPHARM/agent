@@ -1,0 +1,4 @@
+# name	relative_path	auto_fast_forward
+agent	agent	yes
+rnd	rnd	yes
+project	project	yes

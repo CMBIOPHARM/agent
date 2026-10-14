@@ -26,6 +26,15 @@
 - 완료 항목과 중지된 에이전트도 삭제하지 않고 Project에 남겨 운영 이력을 보존한다.
 - Project의 상태를 바꾸면서 역할이나 저장 정책이 달라지면 관련 Markdown 문서도 같은 작업에서 갱신한다.
 
+## Agent 00 통합 저장소 감시
+
+- 감시 대상 저장소는 최상위 `config/repositories.tsv`에 등록한다.
+- Mac의 `scripts/mac_hub_routine.sh`가 등록된 저장소를 15분마다 순회한다.
+- 각 저장소에서 GitHub 연결, `main` 동기화, 미커밋 변경, 분기 상태와 미병합 원격 브랜치를 확인한다.
+- 깨끗한 `main`이 `origin/main`보다 뒤에 있을 때만 fast-forward한다.
+- 자동 커밋, 자동 푸시, 브랜치 병합과 파일 삭제는 하지 않는다.
+- 실행 로그는 `~/Library/Logs/CMBIOPHARM/agent-hub.log`에 기록한다.
+
 ## 역할 문서 필수 항목
 
 각 역할 문서는 다음 항목을 포함한다.

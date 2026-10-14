@@ -1,4 +1,4 @@
-# CMBIOPHARM R&D 저장소 운영 규칙
+# CMBIOPHARM 에이전트 저장소 운영 규칙
 
 이 파일은 Mac, Windows, 휴대폰에서 이 저장소를 다루는 모든 에이전트에 적용한다.
 사용자가 현재 작업에서 내린 지시가 이 문서보다 우선한다.
@@ -23,6 +23,8 @@
 ## 시스템 역할
 
 - **GitHub**가 코드, Markdown, 자동화 설정의 중앙 원본이다.
+- **Agent 00 저장소**가 등록된 GitHub 저장소의 목록과 Mac 통합 감시 자동화를 관리한다.
+- 통합 감시 대상은 `config/repositories.tsv`에서 관리하며, 새 저장소를 감시하려면 이 등록부를 먼저 갱신한다.
 - **Mac**은 영구 작업본과 자동화·시뮬레이터 실행 환경이다.
 - **Windows** 기본 저장소는 3시간마다 `pull-only`로 갱신한다. 이 기본 저장소는 동기화용이며 Orca가 직접 작업하지 않는다.
 - **Windows Orca**는 기본 저장소와 분리된 스크래치 공간에 작업별 브랜치와 worktree를 만들어 작업한다.
@@ -61,7 +63,8 @@
 
 - Mac용 시뮬레이터 환경은 `bash scripts/setup_macos_simulators.sh`로 준비한다.
 - CaPSim은 `scripts/capsim/CaPSim.command`, CMBind는 `scripts/cmbind/CMBind.command`로 실행한다.
-- Mac 중앙 수신·상태 점검은 `scripts/mac_hub_routine.sh`로 실행하고 `scripts/install_mac_hub_routine.sh`로 등록한다.
+- Mac 중앙 수신·상태 점검은 이 저장소의 `scripts/mac_hub_routine.sh`로 실행하고 `scripts/install_mac_hub_routine.sh`로 등록한다.
+- 중앙 루틴은 `config/repositories.tsv`에 등록된 저장소를 모두 점검하고, 깨끗한 `main`이 원격보다 뒤에 있을 때만 fast-forward한다.
 - Mac 중앙 루틴은 원격 `main`을 fast-forward할 수 있지만 자동 커밋·푸시·브랜치 병합은 하지 않는다.
 - Mac에서 작업 트리 전체를 훑는 범용 자동 커밋을 만들지 않는다. 업무별 자동화가 결과를 커밋해야 하면 사전에 정한 출력 파일만 지정한다.
 - 새 정기 작업은 Mac에서 실행하도록 만들고, 실행 주기·입력·출력·로그 위치를 저장소 문서에 기록한다.
