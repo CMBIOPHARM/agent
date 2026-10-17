@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""요약 Markdown을 docx로 바꿔 저장 위치에 덮어쓰지 않고 저장한 뒤 존재를 확인한다.
+"""요약을 docx로 저장하고 존재를 확인한다. 덮어쓰지 않는다.
 
-같은 이름(확장자 무관, 예: 기존 .gdoc)이 있으면 _v2, _v3 …을 붙인다.
-마지막 줄에 저장한 최종 경로를 출력한다.
+- 기본(초안): <stem>_v0.docx. 이미 있으면 <stem>_v0-2, _v0-3 … (v1 이상은 대표 검토본 전용)
+- --release(대표 지시 후): <stem>_v1부터 비어 있는 다음 번호. 입력은 수정된 .md 또는 .docx
+확장자가 달라도(.gdoc 등) 같은 이름이면 사용 중으로 본다. 마지막 줄에 저장한 최종 경로를 출력한다.
 """
 import argparse
 import filecmp
@@ -56,41 +57,60 @@ def md_to_html(md):
         CSS, "\n".join(out))
 
 
-def free_name(dest_dir, stem, ext):
-    taken = {os.path.splitext(f)[0] for f in os.listdir(dest_dir)}
-    if stem not in taken:
-        return stem + ext
-    n = 2
+def taken_stems(dest_dir):
+    return {os.path.splitext(f)[0] for f in os.listdir(dest_dir)}
+
+
+def draft_name(dest_dir, stem):
+    taken = taken_stems(dest_dir)
+    name, n = "%s_v0" % stem, 2
+    while name in taken:
+        name = "%s_v0-%d" % (stem, n)
+        n += 1
+    return name + ".docx"
+
+
+def release_name(dest_dir, stem):
+    taken = taken_stems(dest_dir)
+    n = 1
     while "%s_v%d" % (stem, n) in taken:
         n += 1
-    return "%s_v%d%s" % (stem, n, ext)
+    return "%s_v%d.docx" % (stem, n)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--markdown", required=True)
+    ap.add_argument("--markdown", required=True, help="요약 .md (또는 --release일 때 수정본 .docx)")
     ap.add_argument("--dest-dir", required=True)
     ap.add_argument("--stem", required=True, help="예: 2026-10-16_일일요약")
+    ap.add_argument("--release", action="store_true", help="대표 검토 후 v1 이상으로 저장")
+    ap.add_argument("--make-dir", action="store_true", help="저장 위치(주 폴더)가 없으면 만든다")
     args = ap.parse_args()
 
-    with open(args.markdown, encoding="utf-8") as fh:
-        md = fh.read()
-    if not md.lstrip().startswith("# "):
-        print("요약 형식 오류: 첫 줄이 '# 날짜 일일요약'이 아님", file=sys.stderr)
-        return 3
+    src = os.path.abspath(args.markdown)
+    work_dir = os.path.dirname(src)
+    if src.lower().endswith(".docx"):
+        docx_path = src
+    else:
+        with open(src, encoding="utf-8") as fh:
+            md = fh.read()
+        if not md.lstrip().startswith("# "):
+            print("요약 형식 오류: 첫 줄이 '# 날짜 일일요약'이 아님", file=sys.stderr)
+            return 3
+        html_path = os.path.join(work_dir, "summary.html")
+        docx_path = os.path.join(work_dir, "summary.docx")
+        with open(html_path, "w", encoding="utf-8") as fh:
+            fh.write(md_to_html(md))
+        subprocess.run(["/usr/bin/textutil", "-convert", "docx", "-output", docx_path, html_path],
+                       check=True, timeout=120)
 
-    work_dir = os.path.dirname(os.path.abspath(args.markdown))
-    html_path = os.path.join(work_dir, "summary.html")
-    docx_path = os.path.join(work_dir, "summary.docx")
-    with open(html_path, "w", encoding="utf-8") as fh:
-        fh.write(md_to_html(md))
-    subprocess.run(["/usr/bin/textutil", "-convert", "docx", "-output", docx_path, html_path],
-                   check=True, timeout=120)
-
+    if args.make_dir:
+        os.makedirs(args.dest_dir, exist_ok=True)
     if not os.path.isdir(args.dest_dir):
         print("저장 위치를 찾지 못함: %s" % args.dest_dir, file=sys.stderr)
         return 4
-    final = os.path.join(args.dest_dir, free_name(args.dest_dir, args.stem, ".docx"))
+    pick = release_name if args.release else draft_name
+    final = os.path.join(args.dest_dir, pick(args.dest_dir, args.stem))
     shutil.copyfile(docx_path, final)
     if not (os.path.isfile(final) and filecmp.cmp(docx_path, final, shallow=False)):
         print("저장 확인 실패: %s" % final, file=sys.stderr)

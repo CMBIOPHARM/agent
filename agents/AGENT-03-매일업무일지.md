@@ -1,18 +1,19 @@
 # Agent 03 — 매일 업무일지 요약·점검
 
 - 기록일: 2026-10-17
-- 상태: 준비 (Mac 스크립트 작성·시험 완료, launchd 미등록, `MODE=shadow`)
+- 상태: 운영 중 (Mac launchd 등록, `MODE=live`, v0 초안을 대표 내 드라이브에 저장)
 - 상위 규칙: 최상단 `AGENTS.md`. 이 문서는 그 규칙을 구체화하며 변경하지 않는다.
 - 관련: `Agent 04` 주간 업무지시·주간 요약(`CMBIOPHARM/rnd`의 `agents/AGENT-04-주간업무지시.md`)
 
 ## 1. 목적과 책임 범위
 
-대표(박태준)가 매일 저녁 직원 업무일지를 3분 안에 파악하도록 **일일요약·점검 문서**를 만든다.
+대표(박태준)가 매일 저녁 직원 업무일지를 3분 안에 파악하도록 **일일요약·점검 초안(v0)**을 만든다.
+대표가 읽고 수정 반영을 지시하면 그때 v1 이상을 만들어 공유 드라이브 `업무일지`에 올린다. 자동 실행은 v0만 만든다.
 Agent 03의 역할은 `매일 루틴 업무`로 등록돼 있으며, 이 업무일지 요약·점검이 첫 업무다.
 
 | 대상 | 담당 범위 | 일지 형식 |
 |---|---|---|
-| 문재훈 주임 | 실험 실행·기록(합성, 슬러리·화장품 제형, 분무건조, 열처리, 체분급, BET·pH/EC·탭밀도, 분석 의뢰) | 날짜별 `일일_업무보고서_YYMMDD_문재훈.docx` |
+| 문재훈 주임연구원 | 실험 실행·기록(합성, 슬러리·화장품 제형, 분무건조, 열처리, 체분급, BET·pH/EC·탭밀도, 분석 의뢰) | 날짜별 `일일_업무보고서_YYMMDD_문재훈.docx` |
 | 배현민 이사 | 장비 전체·조달·외부 의뢰·업체 소통 | 누적 `업무보고 모음(…).hwpx`, `금일자(M/D)` 단위 |
 
 대상자는 `config/daily_worklog_people.tsv`에서 관리한다. 직원이 늘거나 형식이 바뀌면 이 표만 고친다.
@@ -49,12 +50,32 @@ Agent 03의 역할은 `매일 루틴 업무`로 등록돼 있으며, 이 업무�
 
 ## 4. 출력과 저장 위치
 
-- 파일명: `YYYY-MM-DD_일일요약.docx` (Drive에서 미리보기·구글 문서 열기 가능)
-- `MODE=live`: `공유 드라이브/CMBIOPHARM/업무일지/` 바로 아래. 2026-10-14~16 `일일요약`이 있는 기존 위치다.
-- `MODE=shadow`: Mac 로컬 `~/Library/Application Support/CMBIOPHARM/daily-worklog/out/`. Drive에 쓰지 않는다.
-- 같은 이름(확장자 무관, 기존 `.gdoc` 포함)이 있으면 덮어쓰지 않고 `_v2`, `_v3`을 붙인다.
+| 단계 | 누가 언제 | 저장 위치 | 파일명 |
+|---|---|---|---|
+| v0 초안 | 자동, 월~금 20:30 | 대표 내 드라이브 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/` | `YYYY-MM-DD_일일요약_v0.docx` |
+| v1 이상 | 대표가 읽고 수정 반영을 지시할 때 | 공유 드라이브 `CMBIOPHARM/업무일지/` | `YYYY-MM-DD_일일요약_v1.docx`, `_v2` … |
+
+- 주 폴더 `YYYY-MM-DD주`는 **그 주 월요일 날짜**다(예: 2026-10-16 요약은 `2026-10-12주`). 없으면 만든다. Agent 04는 토·일에 같은 상위 폴더에 **다음 주 월요일** 폴더를 만들므로, 한 주 폴더에 그 주 업무지시 초안과 그 주 일일요약 v0이 함께 모인다. 대표는 주 단위로 한 번에 검토한다.
+- v0 파일명이 이미 있으면 덮어쓰지 않고 `_v0-2`, `_v0-3`을 붙인다. v1 이상 번호는 대표 검토본에만 쓴다.
+- 공유 드라이브에 이미 같은 번호가 있으면(확장자 무관, 기존 `.gdoc` 포함) 다음 번호를 쓴다.
+- `MODE=shadow`(시험용)는 Drive에 쓰지 않고 Mac 로컬 `~/Library/Application Support/CMBIOPHARM/daily-worklog/out/YYYY-MM-DD주/`에 만든다.
 - 실행마다 중간 산출물(`bundle.md`, `checks.json`, `input.md`, `summary.md`)은 `~/Library/Application Support/CMBIOPHARM/daily-worklog/runs/<날짜_시각>/`에 남는다. 직원 기록이 담기므로 Git에 넣지 않는다.
-- 문서 구성(`scripts/daily_worklog/prompt.md`가 원본): `한눈에` → 사람별 5개 절 → `점검` → `읽은 원본`.
+- 문서 구성(원본은 `scripts/daily_worklog/prompt.md`): `한눈에` → 사람별 5개 절 → `점검` → `읽은 원본`.
+
+### 4-1. v1 배포 절차 (대표 지시가 있을 때만)
+
+1. 대표가 지정한 날짜·주의 최신 v0(대표가 Drive에서 직접 고친 내용 포함)를 읽는다.
+2. 대표의 수정 지시를 반영한 수정본(.md 또는 .docx)을 만든다. 지시에 없는 내용은 바꾸지 않는다.
+3. 날짜마다 다음 명령으로 공유 드라이브에 저장한다. 주 단위 지시면 그 주 날짜를 모두 반복한다.
+
+```bash
+G=~/Library/CloudStorage/GoogleDrive-jpark@cmbiopharm.com
+python3 -I scripts/daily_worklog/publish_summary.py --release \
+  --markdown <수정본.md 또는 .docx> --stem YYYY-MM-DD_일일요약 \
+  --dest-dir "$G/공유 드라이브/CMBIOPHARM/업무일지"
+```
+
+4. 출력된 최종 경로와 파일명을 대표에게 보고한다. v0은 지우지 않는다.
 
 ## 5. 사용할 도구와 실행 환경
 
@@ -63,9 +84,9 @@ Agent 03의 역할은 `매일 루틴 업무`로 등록돼 있으며, 이 업무�
 | `scripts/daily_worklog/run_daily_worklog.sh` | 실행 진입점. 잠금, 로그, 추출 → 요약 → 저장 → 확인 |
 | `scripts/daily_worklog/collect_worklogs.py` | 원본 추출, 기계 점검(미작성, 작성일자 요일, 중복 기재) |
 | `scripts/daily_worklog/prompt.md` | 요약 규칙과 문서 형식 |
-| `scripts/daily_worklog/publish_summary.py` | Markdown → HTML → docx(`textutil`), 버전 붙여 저장, 바이트 비교 확인 |
+| `scripts/daily_worklog/publish_summary.py` | Markdown → HTML → docx(`textutil`), v0 또는 `--release` v1 이상으로 저장, 바이트 비교 확인 |
 | `scripts/daily_worklog/install_daily_worklog.sh` | launchd 등록·해제(`--remove`) |
-| `config/daily_worklog.conf` | `MODE`, `MODEL`, 원본·저장 경로 |
+| `config/daily_worklog.conf` | `MODE`, `MODEL`, 원본(`RAW_DIR`)·v0(`DRAFT_DIR`)·공유(`SHARE_DIR`) 경로 |
 | `config/daily_worklog_people.tsv` | 대상자 등록부 |
 
 - Mac 기본 도구만 쓴다: `/usr/bin/python3`(3.9, 표준 라이브러리), `textutil`, `plutil`, `osascript`, `perl`(시간 제한).
@@ -85,22 +106,17 @@ bash scripts/daily_worklog/install_daily_worklog.sh --remove # 해제
 - 저장한 파일이 저장 위치에 존재하고 로컬 docx와 바이트가 같다(`publish_summary.py`).
 - 로그에 `SAVE <최종 경로>`와 `DONE`이 있다.
 - 날짜(요일)는 스크립트·모델 모두 `Asia/Seoul` 실제 달력으로 검산한다.
-- 2026-10-17 시험: `--date 2026-10-16 --mode shadow` 정상(문재훈 미작성, 배현민 10/16자 5회 기재 감지, 기재본 차이 기록). docx 변환·`_v2` 증가 확인.
+- 2026-10-17 시험: `--date 2026-10-16 --mode shadow` 정상(문재훈 미작성, 배현민 10/16자 5회 기재 감지, 기재본 차이 기록). v0 → `_v0-2`, `--release` v1 → v2 → v3 번호 증가 확인.
 
 ## 7. 로그·오류 보고, 기존 생성기에서 이전
 
 - 로그: `~/Library/Logs/CMBIOPHARM/daily-worklog.log` (`START`, `READ`, `SAVE`, `DONE`, `FAIL`, `SKIP`), launchd 출력은 `daily-worklog-launchd.log`.
 - 실패하면 macOS 알림을 띄우고 중간 산출물을 지우지 않는다. 정상 실행은 알리지 않는다.
-- **기존 생성기**: 2026-10-14~16 매일 20:15~20:20 KST에 `업무일지/` 아래 `YYYY-MM-DD_일일요약` 구글 문서를 만든 작업이 있다. 2026-10-17 현재 이 계정의 클라우드 예약 루틴 목록과 Mac launchd·crontab에서는 출처를 찾지 못했다.
-- 이전 절차(`AGENTS.md`: 두 번 정상 생성 후 기존 해제):
-  1. Mac에 `MODE=shadow`로 등록해 평일 두 번 이상 기존 문서와 비교한다.
-  2. 대표가 기존 생성기를 찾아 끈다.
-  3. `config/daily_worklog.conf`의 `MODE=live`를 커밋한다. 두 생성기가 같은 날 같은 폴더에 쓰지 않게 한다.
-- 2026-10-16 기존 문서에 적힌 `_일일요약_누적` 폴더(`1RrK_DWRfWbsWK8Dd00q18nBW6Xx84Q4T`)는 조회되지 않는다. 다른 폴더로 옮기려면 `DEST_DIR`만 바꾼다.
+- 이전 생성기(클로드 웹 예약 작업, 2026-10-14~16 `업무일지/`에 `YYYY-MM-DD_일일요약` 구글 문서 생성)는 2026-10-17 대표가 삭제했다. 그 3개 문서는 그대로 둔다. 이 에이전트가 유일한 일일요약 생성기다.
 
 ## 8. 다른 에이전트와의 인계
 
-- **Agent 04(주간 업무지시·주간 요약)**: Agent 04 문서가 `일일 요약`을 입력으로 쓴다. Agent 03의 `업무일지/YYYY-MM-DD_일일요약.docx`를 그 입력으로 한다. 토·일 실행 전에 그 주 월~금 요약이 있는지 Agent 03 로그로 확인할 수 있다.
+- **Agent 04(주간 업무지시·주간 요약)**: Agent 04가 `일일 요약`을 입력으로 쓸 때 같은 상위 폴더 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/`(그 주 월요일)의 `_일일요약_v0*.docx`와 공유 드라이브의 v1 이상을 읽는다. 둘 다 있으면 가장 높은 v 번호가 대표 검토본이다.
 - Agent 01(연구개발)은 일지의 실험 결과를 연구 문서로 옮길 때 원본 일지를 직접 본다. 요약은 참고용이다.
 - 저장 위치·기기·실행 주기 변경은 Agent 00이 조정한다.
 
@@ -109,13 +125,12 @@ bash scripts/daily_worklog/install_daily_worklog.sh --remove # 해제
 - 원본 일지를 수정·이동·삭제하지 않는다. 직원에게 메일·메시지를 보내지 않는다.
 - 요약·중간 산출물을 Git에 커밋하지 않는다. 내용을 Drive와 요약 모델 밖으로 보내지 않는다.
 - 사람 평가, 담당 변경, 업무 지시는 하지 않는다(대표 판단, 주간 지시는 Agent 04 초안).
-- 사람 판단 필요:
-  - `MODE=live` 전환과 기존 생성기 해제 시점
-  - 저장 위치가 직원도 볼 수 있는 공유 드라이브여도 되는지. 대표 전용으로 하려면 `DEST_DIR`을 내 드라이브 폴더로 바꾼다.
-  - 직급 표기: 등록부는 Agent 04와 같이 `문재훈 주임`이며, 10/15 보고서 직위란에는 `선임연구원`으로 적혀 있다.
+- v0을 공유 드라이브나 직원 폴더에 자동으로 올리지 않는다. v1 이상은 대표 지시가 있을 때만 4-1 절차로 만든다.
+- 사람 판단 필요: v1 배포 여부와 수정 내용, 저장 위치 변경.
 
 ## 수정 이력
 
 | 일시 | 내용 |
 |---|---|
 | 2026-10-17 | 최초 작성. 추출·요약·저장 스크립트와 launchd 설치기 추가, 10/16 데이터로 shadow 시험 |
+| 2026-10-17 | 대표 지시 반영: 초안은 v0으로 내 드라이브 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/`에 저장, 검토 후 v1부터 공유 드라이브 `업무일지`, 문재훈 직급 `주임연구원`, 이전 클로드 웹 생성기 삭제로 `MODE=live` |

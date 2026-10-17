@@ -10,7 +10,7 @@
 | Agent 00 | 전체 운영·저장·기기·전문 에이전트 조정 | 운영 중 | `../AGENTS.md` |
 | Agent 01 | 연구개발 | 설계 예정 | 추후 작성 |
 | Agent 02 | 시뮬레이션 강화 | 설계 예정 | 추후 작성 |
-| Agent 03 | 매일 루틴 업무 — 매일 업무일지 요약·점검 (월~금 20:30, Mac) | 준비 | `AGENT-03-매일업무일지.md` |
+| Agent 03 | 매일 루틴 업무 — 매일 업무일지 요약·점검 (월~금 20:30, Mac) | 운영 중 | `AGENT-03-매일업무일지.md` |
 | Agent 04 | 주간 업무지시·주간 요약 (토 10시 차주 지시 초안, 일 10시 주간 요약·차주 정리 초안) | 준비 | `CMBIOPHARM/rnd`의 `agents/AGENT-04-주간업무지시.md` |
 | Agent 05 | 미지정 | 비어 있음 | 추후 작성 |
 
@@ -39,7 +39,8 @@
 
 - Mac launchd `com.cmbiopharm.daily-worklog`가 월~금 20:30 KST에 `scripts/daily_worklog/run_daily_worklog.sh`를 실행한다.
 - 입력은 공유 드라이브 `CMBIOPHARM/업무일지/<이름>/` 원본(읽기 전용), 대상자는 `config/daily_worklog_people.tsv`.
-- 출력은 `YYYY-MM-DD_일일요약.docx`. `config/daily_worklog.conf`의 `MODE=shadow`면 Mac 로컬, `live`면 `업무일지/` 폴더에 저장한다.
+- 출력은 v0 초안 `YYYY-MM-DD_일일요약_v0.docx`이며 대표 내 드라이브 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/`(그 주 월요일)에 저장한다.
+- 대표가 검토·수정을 지시하면 v1 이상을 공유 드라이브 `CMBIOPHARM/업무일지/`에 올린다. 자동 실행은 공유 드라이브에 쓰지 않는다.
 - 실행 로그는 `~/Library/Logs/CMBIOPHARM/daily-worklog.log`에 기록한다.
 
 ## 역할 문서 필수 항목

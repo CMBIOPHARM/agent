@@ -78,14 +78,16 @@ if ! /usr/bin/perl -e 'alarm shift; exec @ARGV' 600 \
   fail "요약 생성 실패: $(head -c 300 "${run_dir}/claude.err" | tr '\n' ' ') (${run_dir})"
 fi
 
+# 주 폴더는 그 주 월요일 날짜(YYYY-MM-DD주). 토·일 실행분도 그 주에 넣는다.
+week="$(/usr/bin/python3 -I -c 'import datetime as d,sys; x=d.date.fromisoformat(sys.argv[1]); print((x-d.timedelta(days=x.weekday())).isoformat())' "${day}")주"
 if [[ "${mode}" == "live" ]]; then
-  dest_dir="${drive_root}/${DEST_DIR}"
+  [[ -d "${drive_root}/${DRAFT_DIR}" ]] || fail "v0 저장 위치 없음(마운트 확인): ${drive_root}/${DRAFT_DIR}"
+  dest_dir="${drive_root}/${DRAFT_DIR}/${week}"
 else
-  dest_dir="${state_dir}/out"
-  mkdir -p "${dest_dir}"
+  dest_dir="${state_dir}/out/${week}"
 fi
 
-if ! final="$(/usr/bin/python3 -I "${script_dir}/publish_summary.py" \
+if ! final="$(/usr/bin/python3 -I "${script_dir}/publish_summary.py" --make-dir \
     --markdown "${run_dir}/summary.md" --dest-dir "${dest_dir}" --stem "${stem}" | tail -n 1)"; then
   fail "저장 실패. 로컬 원본 유지: ${run_dir}/summary.md"
 fi
