@@ -31,6 +31,7 @@ Agent 03의 역할은 `매일 루틴 업무`로 등록돼 있으며, 이 업무�
 |---|---|---|---|
 | 일일요약·점검 | **중지**(2026-10-18). 필요하면 `--date`로 수동 실행 | Mac mini | launchd 해제됨 |
 | 주간 정리 v0 (Word) | 매주 일요일 10:00 KST | Mac mini | launchd `com.cmbiopharm.weekly-review` |
+| v1 발행 감시 (대표 메모) | 10분마다 | Mac mini | launchd `com.cmbiopharm.weekly-release` |
 
 - 직원 일지는 보통 18:00~18:45에 올라온다(2026-10 기준 파일 수정 시각). 20:30은 Drive 동기화 여유를 둔 시각이다.
 - 실행 날짜는 `TZ=Asia/Seoul` 기준 당일이다. 놓친 날은 `--date YYYY-MM-DD`로 수동 실행한다. 자동 보충 실행은 하지 않는다.
@@ -93,7 +94,22 @@ python3 -I scripts/daily_worklog/publish_summary.py --release \
   - `대표 결정 대기`, `미룬 것`, 참고(요일 정정, 실제로 읽은 리포 문서).
 - 만드는 방법: 스크립트가 완성본 PDF(macOS PDFKit)와 지난주 월~토 일지를 추출하고 rnd 커밋 목록을 붙인다. Opus(`WEEKLY_MODEL`)가 rnd 리포 안에서 읽기 전용 도구(`Read`·`Glob`·`Grep`)로 관련 문서를 읽고 JSON을 낸다. `render_weekly_docx.py`가 표·쪽 나눔이 있는 Word로 만든다.
 - 수동 실행: `bash scripts/weekly_review/run_weekly_review.sh --next-monday YYYY-MM-DD [--only 이름] [--mode shadow]`
-- v1 이상은 일일요약과 같이 대표 지시가 있을 때만 만든다(§4-1의 `--release`, 저장 위치는 대표가 지정).
+- v1 이상은 아래 §4-3 메모 규칙으로만 발행한다.
+
+### 4-3. v1 발행 규칙 — 대표 메모 (2026-10-18 대표 지시)
+
+1. 대표가 v0 폴더(`09. 인사/01. 차주업무지시/<주>/`)에 메모장으로 수정 내역·지시를 적어 `.txt`(또는 `.md`)로 저장한다. 파일 이름은 자유다.
+2. **첫 줄(빈 줄 제외)에 `v1발행`**이라고 쓴다(띄어쓰기 무관, `v2발행`처럼 써도 같다). 첫 줄이 다르면 일반 메모로 보고 건드리지 않는다.
+3. 대상자: 메모 파일명이나 본문에 이름(문재훈, 배현민)이 있으면 그 사람만, 없으면 그 폴더의 주간정리 v0 전원.
+4. Mac launchd `com.cmbiopharm.weekly-release`가 10분마다 최근 8주 v0 폴더를 확인한다. 발행 대상 메모를 찾으면 다음을 진행한다.
+   - 메모(최우선), v0을 만든 JSON, Drive v0 Word의 현재 텍스트(대표가 직접 고친 내용 포함)를 Opus에 넘긴다.
+   - 메모에 적힌 것만 바꾸고 나머지는 v0 그대로 둔다. 메모가 요구하면 rnd 리포를 읽기 전용으로 확인한다.
+   - 맨 위를 `vN · 대표 검토 반영본 · 날짜`(남색 테두리)로 바꾼 Word를 만든다.
+   - **공유 드라이브 `CMBIOPHARM/업무일지/주간_업무중점/<주>/<주>_주간정리_<이름>_vN.docx`**에 저장한다. N은 1부터 비어 있는 다음 번호이며 덮어쓰지 않는다. 대표 완성본 `_업무지시_이름_V숫자.pdf`와 이름이 겹치지 않는다.
+5. 같은 폴더에 `<메모이름>_결과.txt`를 남긴다. 발행 경로, 반영한 것, 반영하지 못한 지시와 이유가 적힌다. 모호한 지시는 임의로 해석하지 않고 `미반영`으로 돌려준다.
+6. 같은 내용의 메모는 다시 발행하지 않는다. 고쳐 저장하면(첫 줄 `v1발행` 유지) 다음 번호(v2…)로 다시 발행한다. 실패해도 같은 내용으로 반복하지 않으며, 메모를 고쳐 저장하면 재시도한다.
+- 처리 기록: `~/Library/Logs/CMBIOPHARM/weekly-release.log`, 작업 파일 `~/Library/Application Support/CMBIOPHARM/weekly-review/releases/`, 처리한 메모 목록 `release_state.json`.
+- 2026-10-18 시험(시험 폴더, cp949 메모): v1 발행, 결과 메모 작성, 같은 메모 재발행 안 함 확인. 모호한 지시 1건은 `미반영`으로 돌려줌.
 - 2026-10-18 시험: `--next-monday 2026-10-19 --mode shadow --only 문재훈`. 완성본 V3 5개 행 대조, 리포 문서 10개 근거, 권장 7개.
 
 ## 5. 사용할 도구와 실행 환경
@@ -112,6 +128,9 @@ python3 -I scripts/daily_worklog/publish_summary.py --release \
 | `scripts/weekly_review/prompt_weekly.md` | 주간 정리 규칙과 JSON 형식 |
 | `scripts/weekly_review/render_weekly_docx.py` | JSON → Word(표, 상태 색, 쪽 나눔). 표준 라이브러리만 사용 |
 | `scripts/weekly_review/install_weekly_review.sh` | 일요일 10:00 launchd 등록·해제(`--remove`) |
+| `scripts/weekly_review/release_watch.py`, `run_release_watch.sh` | 대표 메모 `v1발행` 감시와 v1 이상 발행(§4-3) |
+| `scripts/weekly_review/prompt_revise.md` | v1 반영 규칙(메모에 적힌 것만 수정) |
+| `scripts/weekly_review/install_release_watch.sh` | 10분 주기 발행 감시 launchd 등록·해제(`--remove`) |
 
 - Mac 기본 도구만 쓴다: `/usr/bin/python3`(3.9, 표준 라이브러리), `textutil`, `plutil`, `osascript`, `perl`(시간 제한).
 - 요약: `claude -p --model claude-sonnet-5-5 --tools "" --strict-mcp-config --setting-sources ""`, 10분 제한.
@@ -158,6 +177,7 @@ bash scripts/daily_worklog/install_daily_worklog.sh --remove # 해제
 | 일시 | 내용 |
 |---|---|
 | 2026-10-17 | 최초 작성. 추출·요약·저장 스크립트와 launchd 설치기 추가, 10/16 데이터로 shadow 시험 |
+| 2026-10-18 | v1 발행 규칙 추가: v0 폴더에 첫 줄 `v1발행` 메모 → 10분 안에 공유 드라이브 `주간_업무중점/<주>/`에 vN 발행, `_결과.txt` 회신 |
 | 2026-10-18 | 대표 지시로 일일요약 자동 실행 중지(`install_daily_worklog.sh --remove`). `collect_worklogs.py`는 주간 정리가 계속 사용 |
 | 2026-10-18 | 대표 양식으로 주간 정리 v0(Word) 추가: 앞쪽 지난주 중점 대비 수행(업무일지), 뒤쪽 차주 권장 업무(rnd 리포), 일요일 10:00, Opus |
 | 2026-10-17 | 대표 지시 반영: 초안은 v0으로 내 드라이브 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/`에 저장, 검토 후 v1부터 공유 드라이브 `업무일지`, 문재훈 직급 `주임연구원`, 이전 클로드 웹 생성기 삭제로 `MODE=live` |
