@@ -66,6 +66,8 @@
 - Mac 중앙 수신·상태 점검은 이 저장소의 `scripts/mac_hub_routine.sh`로 실행하고 `scripts/install_mac_hub_routine.sh`로 등록한다.
 - 중앙 루틴은 `config/repositories.tsv`에 등록된 저장소를 모두 점검하고, 깨끗한 `main`이 원격보다 뒤에 있을 때만 fast-forward한다.
 - Mac 중앙 루틴은 원격 `main`을 fast-forward할 수 있지만 자동 커밋·푸시·브랜치 병합은 하지 않는다.
+- 일일 업무보고는 `scripts/generate_daily_report.sh`가 매일 07:00 KST에 지난 24시간을 집계해 `reports/daily/`에 새 Markdown으로 저장한다.
+- 일일 업무보고 자동화는 임시 worktree에서 당일 보고 파일 하나만 스테이징·커밋하고, fast-forward push가 가능한 경우에만 `main`에 반영한다.
 - Mac에서 작업 트리 전체를 훑는 범용 자동 커밋을 만들지 않는다. 업무별 자동화가 결과를 커밋해야 하면 사전에 정한 출력 파일만 지정한다.
 - 새 정기 작업은 Mac에서 실행하도록 만들고, 실행 주기·입력·출력·로그 위치를 저장소 문서에 기록한다.
 - 자동화가 파일을 커밋하거나 외부로 전송할 때는 대상 파일, 용량, 비밀정보를 확인하는 보호 절차를 둔다.
