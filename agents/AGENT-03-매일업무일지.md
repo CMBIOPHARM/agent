@@ -1,4 +1,4 @@
-# Agent 03 — 매일 업무일지 요약·점검
+# Agent 03 — 매일 업무일지 요약·점검, 주간 정리
 
 - 기록일: 2026-10-17
 - 상태: 운영 중 (Mac launchd 등록, `MODE=live`, v0 초안을 대표 내 드라이브에 저장)
@@ -30,6 +30,7 @@ Agent 03의 역할은 `매일 루틴 업무`로 등록돼 있으며, 이 업무�
 | 작업 | 주기 | 기기 | 등록 |
 |---|---|---|---|
 | 일일요약·점검 | 월~금 20:30 KST | Mac mini | launchd `com.cmbiopharm.daily-worklog` |
+| 주간 정리 v0 (Word) | 매주 일요일 10:00 KST | Mac mini | launchd `com.cmbiopharm.weekly-review` |
 
 - 직원 일지는 보통 18:00~18:45에 올라온다(2026-10 기준 파일 수정 시각). 20:30은 Drive 동기화 여유를 둔 시각이다.
 - 실행 날짜는 `TZ=Asia/Seoul` 기준 당일이다. 놓친 날은 `--date YYYY-MM-DD`로 수동 실행한다. 자동 보충 실행은 하지 않는다.
@@ -44,7 +45,7 @@ Agent 03의 역할은 `매일 루틴 업무`로 등록돼 있으며, 이 업무�
    - hwpx: 수정 시각이 최근인 2개 파일의 `Contents/section*.xml`에서 텍스트를 뽑고 `금일자(M/D)` 머리말로 나눈다. 머리말이 앞 문단 끝에 붙은 경우도 이름 위치에서 나눈다.
    - 같은 날짜가 여러 번 기재되면 **마지막 기재본**을 기준으로 하고, 앞 기재본에만 있던 항목은 `점검`에 적는다.
 2. **직전 기록**: 최근 7일 안의 가장 가까운 이전 기록. 계획 대비 이행 대조에 쓴다.
-3. `업무일지/주간_업무중점/`의 주간 완성본, `rnd` 리포는 이 에이전트의 입력이 아니다(Agent 04 담당).
+3. 주간 정리에서만 쓰는 입력(§4-2): `업무일지/주간_업무중점/<지난주 월요일>주/`의 대표 완성본 `*_업무지시_이름_V숫자.pdf`(가장 높은 V), Mac의 `rnd` 기본 저장소(`~/orca/rnd`, origin/main). 둘 다 읽기만 한다.
 
 원본 추출은 결정적 스크립트가 하고, 요약 모델에는 추출 묶음만 넘긴다. 모델은 도구·MCP·네트워크 없이 실행된다.
 
@@ -77,6 +78,24 @@ python3 -I scripts/daily_worklog/publish_summary.py --release \
 
 4. 출력된 최종 경로와 파일명을 대표에게 보고한다. v0은 지우지 않는다.
 
+### 4-2. 주간 정리 v0 (Word, 매주 일요일)
+
+대표가 정한 양식(2026-10-18)이다. 사람별 Word 파일 하나, 2쪽 구성이다.
+
+- 저장: `09. 인사/01. 차주업무지시/<차주 월요일>주/<차주 월요일>주_주간정리_<이름>_v0.docx`. Agent 04 차주 업무지시 초안과 같은 폴더다. 같은 이름이 있으면 `_v0-2`.
+- 맨 위 빨간 테두리 `초안 v0 · 대표 검토 전 · 배포 금지`, 제목 `주간 정리 — 이름 직급`, 지난주·차주 기간.
+- **앞쪽 — 1. 지난주 중점 대비 수행 (업무일지)**
+  - 지난주 대표 완성본(최고 V)의 중점 한 줄과 할 일 표의 각 행을 `중점 항목`으로 옮긴다.
+  - 표: `# | 중점 항목 | 수행 내용(업무일지) | 상태`. 상태는 `완료 / 일부 / 미완료 / 미확인`(색 구분). 일지 근거가 없으면 `미확인`.
+  - `중점 외 수행`, `기록 점검`(미작성일, 중복 기재, 요일 오기, 일지와 리포 불일치).
+- **뒤쪽(새 쪽) — 2. 차주 권장 업무 방향 (rnd 리포 기준)**
+  - 방향 한 줄, 표: `# | 권장 업무 | 근거(리포 경로·커밋) | 완료 기준`. 5~7행, 이월은 `(이월)`, 추정은 `(제안)`.
+  - `대표 결정 대기`, `미룬 것`, 참고(요일 정정, 실제로 읽은 리포 문서).
+- 만드는 방법: 스크립트가 완성본 PDF(macOS PDFKit)와 지난주 월~토 일지를 추출하고 rnd 커밋 목록을 붙인다. Opus(`WEEKLY_MODEL`)가 rnd 리포 안에서 읽기 전용 도구(`Read`·`Glob`·`Grep`)로 관련 문서를 읽고 JSON을 낸다. `render_weekly_docx.py`가 표·쪽 나눔이 있는 Word로 만든다.
+- 수동 실행: `bash scripts/weekly_review/run_weekly_review.sh --next-monday YYYY-MM-DD [--only 이름] [--mode shadow]`
+- v1 이상은 일일요약과 같이 대표 지시가 있을 때만 만든다(§4-1의 `--release`, 저장 위치는 대표가 지정).
+- 2026-10-18 시험: `--next-monday 2026-10-19 --mode shadow --only 문재훈`. 완성본 V3 5개 행 대조, 리포 문서 10개 근거, 권장 7개.
+
 ## 5. 사용할 도구와 실행 환경
 
 | 파일 | 역할 |
@@ -88,6 +107,11 @@ python3 -I scripts/daily_worklog/publish_summary.py --release \
 | `scripts/daily_worklog/install_daily_worklog.sh` | launchd 등록·해제(`--remove`) |
 | `config/daily_worklog.conf` | `MODE`, `MODEL`, 원본(`RAW_DIR`)·v0(`DRAFT_DIR`)·공유(`SHARE_DIR`) 경로 |
 | `config/daily_worklog_people.tsv` | 대상자 등록부 |
+| `scripts/weekly_review/run_weekly_review.sh` | 주간 정리 진입점. 사람별 생성·Word 변환·저장, 로그 `weekly-review.log` |
+| `scripts/weekly_review/collect_week.py` | 완성본 PDF·주간 일지·rnd 커밋 목록 추출 |
+| `scripts/weekly_review/prompt_weekly.md` | 주간 정리 규칙과 JSON 형식 |
+| `scripts/weekly_review/render_weekly_docx.py` | JSON → Word(표, 상태 색, 쪽 나눔). 표준 라이브러리만 사용 |
+| `scripts/weekly_review/install_weekly_review.sh` | 일요일 10:00 launchd 등록·해제(`--remove`) |
 
 - Mac 기본 도구만 쓴다: `/usr/bin/python3`(3.9, 표준 라이브러리), `textutil`, `plutil`, `osascript`, `perl`(시간 제한).
 - 요약: `claude -p --model claude-sonnet-5-5 --tools "" --strict-mcp-config --setting-sources ""`, 10분 제한.
@@ -116,7 +140,8 @@ bash scripts/daily_worklog/install_daily_worklog.sh --remove # 해제
 
 ## 8. 다른 에이전트와의 인계
 
-- **Agent 04(주간 업무지시·주간 요약)**: Agent 04가 `일일 요약`을 입력으로 쓸 때 같은 상위 폴더 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/`(그 주 월요일)의 `_일일요약_v0*.docx`와 공유 드라이브의 v1 이상을 읽는다. 둘 다 있으면 가장 높은 v 번호가 대표 검토본이다.
+- **Agent 04(주간 업무지시·주간 요약)**: 주간 정리 v0(§4-2)이 Agent 04 문서 §4-2의 일요일 `주간 요약·차주 정리` 작업을 대표 양식으로 대신한다. 그 일요일 작업은 Mac에 따로 등록하지 않는다. 토요일 차주 업무지시 초안(클라우드)은 그대로 둔다.
+- **Agent 04 입력**: Agent 04가 `일일 요약`을 입력으로 쓸 때 같은 상위 폴더 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/`(그 주 월요일)의 `_일일요약_v0*.docx`와 공유 드라이브의 v1 이상을 읽는다. 둘 다 있으면 가장 높은 v 번호가 대표 검토본이다.
 - Agent 01(연구개발)은 일지의 실험 결과를 연구 문서로 옮길 때 원본 일지를 직접 본다. 요약은 참고용이다.
 - 저장 위치·기기·실행 주기 변경은 Agent 00이 조정한다.
 
@@ -133,4 +158,5 @@ bash scripts/daily_worklog/install_daily_worklog.sh --remove # 해제
 | 일시 | 내용 |
 |---|---|
 | 2026-10-17 | 최초 작성. 추출·요약·저장 스크립트와 launchd 설치기 추가, 10/16 데이터로 shadow 시험 |
+| 2026-10-18 | 대표 양식으로 주간 정리 v0(Word) 추가: 앞쪽 지난주 중점 대비 수행(업무일지), 뒤쪽 차주 권장 업무(rnd 리포), 일요일 10:00, Opus |
 | 2026-10-17 | 대표 지시 반영: 초안은 v0으로 내 드라이브 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/`에 저장, 검토 후 v1부터 공유 드라이브 `업무일지`, 문재훈 직급 `주임연구원`, 이전 클로드 웹 생성기 삭제로 `MODE=live` |
