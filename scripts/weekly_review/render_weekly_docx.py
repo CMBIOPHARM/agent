@@ -83,12 +83,15 @@ def table(widths, header, rows):
     return "<w:tbl>%s<w:tblGrid>%s</w:tblGrid>%s%s</w:tbl>" % (tblpr, grid, head, body) + para("", space_after=60)
 
 
-def build(data, name, title, prev_monday, next_monday, generated):
+DRAFT_LABEL = "초안 v0 · 대표 검토 전 · 배포 금지"
+
+
+def build(data, name, title, prev_monday, next_monday, generated, label=DRAFT_LABEL):
     prev_fri = prev_monday + dt.timedelta(days=4)
     next_fri = next_monday + dt.timedelta(days=4)
     x = []
-    x.append(para(run("초안 v0 · 대표 검토 전 · 배포 금지", 11, True, "C00000"), align="center",
-                  border=("single", "C00000"), space_after=160))
+    color = "C00000" if label == DRAFT_LABEL else "1F3864"
+    x.append(para(run(label, 11, True, color), align="center", border=("single", color), space_after=160))
     x.append(para(run("주간 정리 — %s %s" % (name, title), 20, True), space_after=40))
     x.append(para(run("지난주 %s~%s · 차주 %s~%s · 생성 %s" % (
         kdate(prev_monday), kdate(prev_fri), kdate(next_monday), kdate(next_fri), generated), 10, color="595959"),
@@ -170,6 +173,7 @@ def main():
     ap.add_argument("--title", required=True)
     ap.add_argument("--next-monday", required=True)
     ap.add_argument("--output", required=True)
+    ap.add_argument("--label", default=DRAFT_LABEL, help="맨 위 테두리 문구. v1 이상은 예: 'v1 · 대표 검토 반영본'")
     args = ap.parse_args()
 
     data = load_json(args.json)
@@ -178,7 +182,7 @@ def main():
         return 3
     next_monday = dt.date.fromisoformat(args.next_monday)
     generated = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
-    xml = build(data, args.name, args.title, next_monday - dt.timedelta(days=7), next_monday, generated)
+    xml = build(data, args.name, args.title, next_monday - dt.timedelta(days=7), next_monday, generated, args.label)
     with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("[Content_Types].xml", CONTENT_TYPES)
         zf.writestr("_rels/.rels", RELS)

@@ -43,6 +43,7 @@
 - 대표가 검토·수정을 지시하면 v1 이상을 공유 드라이브 `CMBIOPHARM/업무일지/`에 올린다. 자동 실행은 공유 드라이브에 쓰지 않는다.
 - 실행 로그는 `~/Library/Logs/CMBIOPHARM/daily-worklog.log`에 기록한다.
 - 주간 정리 v0: launchd `com.cmbiopharm.weekly-review`가 일요일 10:00에 `scripts/weekly_review/run_weekly_review.sh`를 실행한다. 사람별 `<차주 월요일>주_주간정리_<이름>_v0.docx`(앞쪽 지난주 중점 대비 수행, 뒤쪽 차주 권장 업무)를 같은 주 폴더에 저장하고, 로그는 `weekly-review.log`에 남긴다.
+- v1 발행: 대표가 v0 폴더에 첫 줄이 `v1발행`인 메모장(.txt)을 저장하면 launchd `com.cmbiopharm.weekly-release`(10분 주기)가 메모를 반영해 공유 드라이브 `업무일지/주간_업무중점/<주>/`에 `_vN.docx`를 발행하고 `<메모>_결과.txt`로 회신한다.
 
 ## 역할 문서 필수 항목
 
