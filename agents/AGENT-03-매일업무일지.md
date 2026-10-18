@@ -134,6 +134,7 @@ python3 -I scripts/daily_worklog/publish_summary.py --release \
 
 - Mac 기본 도구만 쓴다: `/usr/bin/python3`(3.9, 표준 라이브러리), `textutil`, `plutil`, `osascript`, `perl`(시간 제한).
 - 요약: `claude -p --model claude-sonnet-5-5 --tools "" --strict-mcp-config --setting-sources ""`, 10분 제한.
+- **macOS 권한(필수)**: launchd가 띄운 프로세스는 `~/Library/CloudStorage`(Google Drive)를 읽지 못한다("Operation not permitted", 2026-10-18 확인). 모든 Agent 03 launchd 작업은 전용 실행기 `~/Library/Application Support/CMBIOPHARM/bin/cmb-drive-runner`(소스 `scripts/macos_runner/`)를 거쳐 실행하고, **이 실행기 하나에만 전체 디스크 접근 권한**을 준다. 실행기는 자식으로 스크립트를 띄우고 기다리므로 자식(bash·python·claude)이 그 권한으로 Drive에 접근한다. 다시 빌드하면 권한을 다시 줘야 한다.
 - 등록은 **기본 저장소 `~/orca/agent`의 `main`에서** 한다. worktree 경로로 등록하지 않는다. Agent 00 통합 감시가 `main`을 fast-forward하므로 스크립트 갱신이 자동 반영된다.
 
 ```bash
