@@ -34,7 +34,14 @@ interval=600
 
 plutil -create xml1 "${plist}"
 plutil -insert Label -string "${label}" "${plist}"
-plutil -insert ProgramArguments -json "[\"/bin/bash\",\"${program}\"]" "${plist}"
+# Google Drive(~/Library/CloudStorage) 접근은 전체 디스크 접근 권한을 받은 실행기를 거친다.
+runner="${HOME}/Library/Application Support/CMBIOPHARM/bin/cmb-drive-runner"
+if [[ -x "${runner}" ]]; then
+  plutil -insert ProgramArguments -json "[\"${runner}\",\"/bin/bash\",\"${program}\"]" "${plist}"
+else
+  echo "경고: ${runner} 없음. scripts/macos_runner/build_drive_runner.sh 후 권한을 주지 않으면 Drive 접근이 막힌다." >&2
+  plutil -insert ProgramArguments -json "[\"/bin/bash\",\"${program}\"]" "${plist}"
+fi
 plutil -insert StartInterval -integer "${interval}" "${plist}"
 plutil -insert ProcessType -string Background "${plist}"
 plutil -insert StandardOutPath -string "${log_dir}/weekly-release-launchd.log" "${plist}"

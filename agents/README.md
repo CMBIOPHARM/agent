@@ -45,6 +45,10 @@
 - 주간 정리 v0: launchd `com.cmbiopharm.weekly-review`가 일요일 10:00에 `scripts/weekly_review/run_weekly_review.sh`를 실행한다. 사람별 `<차주 월요일>주_주간정리_<이름>_v0.docx`(앞쪽 지난주 중점 대비 수행, 뒤쪽 차주 권장 업무)를 같은 주 폴더에 저장하고, 로그는 `weekly-review.log`에 남긴다.
 - v1 발행: 대표가 v0 폴더에 첫 줄이 `v1발행`인 메모장(.txt)을 저장하면 launchd `com.cmbiopharm.weekly-release`(10분 주기)가 메모를 반영해 공유 드라이브 `업무일지/주간_업무중점/<주>/`에 `_vN.docx`를 발행하고 `<메모>_결과.txt`로 회신한다.
 
+## Mac launchd의 Google Drive 접근
+
+- launchd 작업은 권한 없이 `~/Library/CloudStorage`를 읽지 못한다. Drive를 쓰는 작업은 `scripts/macos_runner/build_drive_runner.sh`로 만든 `cmb-drive-runner`를 거쳐 실행하고, 이 실행기에만 전체 디스크 접근 권한을 준다.
+
 ## 역할 문서 필수 항목
 
 각 역할 문서는 다음 항목을 포함한다.
