@@ -1,7 +1,7 @@
 # Agent 03 — 매일 업무일지 요약·점검, 주간 정리
 
 - 기록일: 2026-10-17
-- 상태: 운영 중 (Mac launchd 등록, `MODE=live`, v0 초안을 대표 내 드라이브에 저장)
+- 상태: 운영 중 — 주간 정리 v0(일요일 10:00, Mac launchd `com.cmbiopharm.weekly-review`). 일일요약은 2026-10-18 대표 지시로 중지(launchd 해제, 스크립트는 수동 실행용으로 유지)
 - 상위 규칙: 최상단 `AGENTS.md`. 이 문서는 그 규칙을 구체화하며 변경하지 않는다.
 - 관련: `Agent 04` 주간 업무지시·주간 요약(`CMBIOPHARM/rnd`의 `agents/AGENT-04-주간업무지시.md`)
 
@@ -29,7 +29,7 @@ Agent 03의 역할은 `매일 루틴 업무`로 등록돼 있으며, 이 업무�
 
 | 작업 | 주기 | 기기 | 등록 |
 |---|---|---|---|
-| 일일요약·점검 | 월~금 20:30 KST | Mac mini | launchd `com.cmbiopharm.daily-worklog` |
+| 일일요약·점검 | **중지**(2026-10-18). 필요하면 `--date`로 수동 실행 | Mac mini | launchd 해제됨 |
 | 주간 정리 v0 (Word) | 매주 일요일 10:00 KST | Mac mini | launchd `com.cmbiopharm.weekly-review` |
 
 - 직원 일지는 보통 18:00~18:45에 올라온다(2026-10 기준 파일 수정 시각). 20:30은 Drive 동기화 여유를 둔 시각이다.
@@ -158,5 +158,6 @@ bash scripts/daily_worklog/install_daily_worklog.sh --remove # 해제
 | 일시 | 내용 |
 |---|---|
 | 2026-10-17 | 최초 작성. 추출·요약·저장 스크립트와 launchd 설치기 추가, 10/16 데이터로 shadow 시험 |
+| 2026-10-18 | 대표 지시로 일일요약 자동 실행 중지(`install_daily_worklog.sh --remove`). `collect_worklogs.py`는 주간 정리가 계속 사용 |
 | 2026-10-18 | 대표 양식으로 주간 정리 v0(Word) 추가: 앞쪽 지난주 중점 대비 수행(업무일지), 뒤쪽 차주 권장 업무(rnd 리포), 일요일 10:00, Opus |
 | 2026-10-17 | 대표 지시 반영: 초안은 v0으로 내 드라이브 `09. 인사/01. 차주업무지시/YYYY-MM-DD주/`에 저장, 검토 후 v1부터 공유 드라이브 `업무일지`, 문재훈 직급 `주임연구원`, 이전 클로드 웹 생성기 삭제로 `MODE=live` |
