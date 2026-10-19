@@ -31,4 +31,5 @@ exec /usr/bin/python3 -I "${script_dir}/release_watch.py" \
   --people "${repo_dir}/config/daily_worklog_people.tsv" \
   --rnd-dir "${RND_DIR:-${CMBIOPHARM_RND_DIR:-$(cd -- "${repo_dir}/.." && pwd)/rnd}}" \
   --state-dir "${state_dir}" \
-  --model "${WEEKLY_MODEL:-claude-opus-5-5}"
+  --model "${WEEKLY_MODEL:-claude-opus-5-5}" \
+  --kakao-dir "${KAKAO_DIR:+${drive_root}/${KAKAO_DIR}}"
