@@ -115,7 +115,7 @@ def build(data, name, title, prev_monday, next_monday, generated, label=DRAFT_LA
 
     # 뒤쪽
     x.append('<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
-    x.append(heading("2. 차주 권장 업무 방향 (rnd 리포 기준)"))
+    x.append(heading("2. 차주 권장 업무 방향 (대표 지시·rnd 리포 기준)"))
     x.append(para(run("방향: ", 11, True) + run(data.get("direction_line") or "미확인", 11), shade="FBE5D6",
                   space_after=100))
     rows = []
@@ -123,7 +123,7 @@ def build(data, name, title, prev_monday, next_monday, generated, label=DRAFT_LA
         rows.append([(run(i, 10, True), None, "center"),
                      ([run(r.get("task", ""), 10, True), run(r.get("detail", ""), 9, color="404040")],),
                      (run(r.get("basis", ""), 9, color="404040"),), (run(r.get("criteria", ""), 10),)])
-    x.append(table([500, 3700, 2500, 2800], ["#", "권장 업무", "근거 (리포)", "완료 기준"], rows))
+    x.append(table([500, 3700, 2500, 2800], ["#", "권장 업무", "근거 (지시·리포)", "완료 기준"], rows))
     x.append(para(run("대표 결정 대기", 11, True), space_after=40, keep=True))
     x.append(bullets(data.get("decisions")))
     x.append(para(run("미룬 것", 11, True), space_after=40, keep=True))

@@ -60,6 +60,7 @@ next_monday="${next_monday:-$(/usr/bin/python3 -I -c 'import datetime as d; t=d.
 raw_dir="${drive_root}/${RAW_DIR}"
 rnd_dir="${RND_DIR:-${CMBIOPHARM_RND_DIR:-$(cd -- "${repo_dir}/.." && pwd)/rnd}}"
 model="${WEEKLY_MODEL:-claude-opus-5-5}"
+kakao_dir="${KAKAO_DIR:+${drive_root}/${KAKAO_DIR}}"
 
 log "START 차주 ${next_monday} mode=${mode} model=${model} repo=$(git -C "${repo_dir}" rev-parse --short HEAD 2>/dev/null || echo '?')"
 [[ -d "${raw_dir}" ]] || fail "Drive 원본 폴더 없음(마운트 확인): ${raw_dir}"
@@ -69,7 +70,7 @@ git -C "${rnd_dir}" fetch --quiet origin || log "WARN rnd fetch 실패. 로컬 o
 run_dir="${state_dir}/runs/${next_monday}_$(date '+%m%d-%H%M%S')"
 mkdir -p "${run_dir}"
 if ! /usr/bin/python3 -I "${script_dir}/collect_week.py" --raw-dir "${raw_dir}" --people "${people}" \
-    --rnd-dir "${rnd_dir}" --next-monday "${next_monday}" --out-dir "${run_dir}" \
+    --rnd-dir "${rnd_dir}" --next-monday "${next_monday}" --out-dir "${run_dir}" --kakao-dir "${kakao_dir}" \
     | while IFS= read -r line; do log "READ ${line}"; done; then
   fail "입력 추출 실패 (${run_dir})"
 fi
