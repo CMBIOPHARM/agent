@@ -17,6 +17,11 @@ lock_dir="${TMPDIR:-/tmp}/cmbiopharm-release-watch.lock"
 mkdir -p "${log_dir}" "${state_dir}"
 exec >>"${log_dir}/weekly-release.log" 2>&1
 
+# 2시간 넘은 잠금은 비정상 종료가 남긴 것으로 보고 지운다(사람당 25분 제한).
+if [[ -d "${lock_dir}" ]] && [[ -n "$(find "${lock_dir}" -maxdepth 0 -mmin +120 2>/dev/null)" ]]; then
+  echo "[$(date '+%F %T')] WARN 오래된 잠금 제거: ${lock_dir}"
+  rmdir "${lock_dir}" 2>/dev/null || true
+fi
 mkdir "${lock_dir}" 2>/dev/null || exit 0
 trap 'rmdir "${lock_dir}" 2>/dev/null || true' EXIT
 
@@ -24,7 +29,8 @@ trap 'rmdir "${lock_dir}" 2>/dev/null || true' EXIT
 source "${conf}"
 [[ -d "${drive_root}/${DRAFT_DIR}" ]] || { echo "[$(date '+%F %T')] FAIL v0 폴더 없음(마운트 확인)"; exit 1; }
 
-exec /usr/bin/python3 -I "${script_dir}/release_watch.py" \
+# exec를 쓰면 위 trap이 사라져 잠금이 남는다. 자식으로 실행한다.
+/usr/bin/python3 -I "${script_dir}/release_watch.py" \
   --drive-root "${drive_root}" \
   --draft-dir "${drive_root}/${DRAFT_DIR}" \
   --share-root "${drive_root}/${SHARE_DIR}/주간_업무중점" \

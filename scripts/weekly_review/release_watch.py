@@ -5,7 +5,7 @@
 - v0 폴더(DRAFT_DIR/<YYYY-MM-DD>주/)에 대표가 메모장(.txt)으로 수정 내역·지시를 적어 저장한다.
 - 첫 줄(빈 줄 제외)이 `v1발행`으로 시작하면(공백 허용, 뒤에 글이 붙어도 됨, v2발행 등도 같음) 발행 대상이다.
 - 메모가 카톡 지시를 가리킬 수 있으므로 사내 카톡 백업의 해당 주(지난주 월요일~오늘) 대화를 함께 넘긴다.
-- 대상자: 메모 파일명이나 본문에 이름이 있으면 그 사람, 없으면 그 폴더의 주간정리 v0 전원.
+- 대상자: 메모 파일명에 이름이 있으면 그 사람(대표 지시 2026-10-19, 본문의 이름은 보지 않음), 없으면 전원.
 - 결과: 공유 드라이브 업무일지/주간_업무중점/<주>/<주>_주간정리_<이름>_v<n>.docx (n은 1부터 비어 있는 다음 번호)
 - 같은 폴더에 `<메모이름>_결과.txt`를 남긴다. 메모 내용이 바뀌지 않으면 다시 발행하지 않는다.
 """
@@ -177,8 +177,7 @@ def main():
             version = trigger_version(text)
             if version is None or state.get(memo_path) == digest:
                 continue
-            body = "\n".join(text.splitlines()[1:]) if text else ""
-            targets = [p for p in people if p["name"] in f or p["name"] in body] or people
+            targets = [p for p in people if p["name"] in f] or people
             log("TRIGGER %s (요청 v%d, 대상 %s)" % (memo_path, version, ",".join(p["name"] for p in targets)))
             work_dir = os.path.join(cfg.state_dir, "releases", "%s_%s" % (week, dt.datetime.now().strftime("%m%d-%H%M%S")))
             os.makedirs(work_dir, exist_ok=True)
