@@ -3,7 +3,8 @@
 
 규칙(대표 지시 2026-10-18)
 - v0 폴더(DRAFT_DIR/<YYYY-MM-DD>주/)에 대표가 메모장(.txt)으로 수정 내역·지시를 적어 저장한다.
-- 첫 줄(빈 줄 제외)이 `v1발행`(공백 허용, v2발행 등도 같음)이면 발행 대상이다.
+- 첫 줄(빈 줄 제외)이 `v1발행`으로 시작하면(공백 허용, 뒤에 글이 붙어도 됨, v2발행 등도 같음) 발행 대상이다.
+- 메모가 카톡 지시를 가리킬 수 있으므로 사내 카톡 백업의 해당 주(지난주 월요일~오늘) 대화를 함께 넘긴다.
 - 대상자: 메모 파일명이나 본문에 이름이 있으면 그 사람, 없으면 그 폴더의 주간정리 v0 전원.
 - 결과: 공유 드라이브 업무일지/주간_업무중점/<주>/<주>_주간정리_<이름>_v<n>.docx (n은 1부터 비어 있는 다음 번호)
 - 같은 폴더에 `<메모이름>_결과.txt`를 남긴다. 메모 내용이 바뀌지 않으면 다시 발행하지 않는다.
@@ -22,9 +23,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "daily_worklog"))
 sys.path.insert(0, HERE)
 import collect_worklogs as cw  # noqa: E402
+from collect_week import kakao_week  # noqa: E402
 from render_weekly_docx import load_json  # noqa: E402
 
-TRIGGER = re.compile(r"^\s*v\s*(\d+)\s*발행\s*$", re.I)
+TRIGGER = re.compile(r"^\s*v\s*(\d+)\s*발행", re.I)
 WEEK_DIR = re.compile(r"^(\d{4}-\d{2}-\d{2})주$")
 MEMO_EXT = (".txt", ".md")
 RESULT_SUFFIX = "_결과"
@@ -85,7 +87,7 @@ def write_result(memo_path, lines):
     return path
 
 
-def revise_one(cfg, week, folder, name, title, memo_text, work_dir):
+def revise_one(cfg, week, folder, name, title, memo_text, work_dir, kakao=""):
     v0 = latest_v0(folder, week, name)
     if not v0:
         return False, "%s: v0 파일이 없음" % name
@@ -94,7 +96,8 @@ def revise_one(cfg, week, folder, name, title, memo_text, work_dir):
              "# 대상: %s %s, %s주 주간 정리\n" % (name, title, week),
              "## 대표 메모\n" + memo_text.strip(),
              "## v0 원본 JSON\n" + (open(run_json, encoding="utf-8").read() if run_json else "(없음)"),
-             "## v0 현재 문서 텍스트 (%s)\n%s" % (os.path.basename(v0), docx_text(v0))]
+             "## v0 현재 문서 텍스트 (%s)\n%s" % (os.path.basename(v0), docx_text(v0)),
+             "## 사내 카톡 백업 (지난주 월요일~오늘)\n" + (kakao or "(없음)")]
     inp = os.path.join(work_dir, "%s.input.md" % name)
     out = os.path.join(work_dir, "%s.json" % name)
     err = os.path.join(work_dir, "%s.err" % name)
@@ -149,6 +152,7 @@ def main():
     ap.add_argument("--rnd-dir", required=True)
     ap.add_argument("--state-dir", required=True)
     ap.add_argument("--model", required=True)
+    ap.add_argument("--kakao-dir", default="")
     cfg = ap.parse_args()
 
     state_path = os.path.join(cfg.state_dir, "release_state.json")
@@ -178,9 +182,12 @@ def main():
             log("TRIGGER %s (요청 v%d, 대상 %s)" % (memo_path, version, ",".join(p["name"] for p in targets)))
             work_dir = os.path.join(cfg.state_dir, "releases", "%s_%s" % (week, dt.datetime.now().strftime("%m%d-%H%M%S")))
             os.makedirs(work_dir, exist_ok=True)
+            monday = dt.date.fromisoformat(week)
+            _files, kakao = kakao_week(cfg.kakao_dir, monday - dt.timedelta(days=7),
+                                       min(dt.date.today(), monday + dt.timedelta(days=6)))
             lines, ok_all = [], True
             for p in targets:
-                ok, msg = revise_one(cfg, week, folder, p["name"], p["title"], text, work_dir)
+                ok, msg = revise_one(cfg, week, folder, p["name"], p["title"], text, work_dir, kakao)
                 ok_all = ok_all and ok
                 lines.append(msg)
                 log(("SAVE " if ok else "FAIL ") + msg.splitlines()[0])
