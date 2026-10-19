@@ -18,6 +18,7 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "daily_worklog"))
@@ -169,7 +170,8 @@ def main():
             continue
         week, folder = m.group(1), os.path.join(cfg.draft_dir, entry)
         for f in sorted(os.listdir(folder)):
-            stem, ext = os.path.splitext(f)
+            # Drive 파일 이름은 한글이 자모 분리형(NFD)일 수 있어 비교 전에 NFC로 맞춘다.
+            stem, ext = os.path.splitext(unicodedata.normalize("NFC", f))
             if ext.lower() not in MEMO_EXT or stem.endswith(RESULT_SUFFIX):
                 continue
             memo_path = os.path.join(folder, f)
@@ -177,7 +179,7 @@ def main():
             version = trigger_version(text)
             if version is None or state.get(memo_path) == digest:
                 continue
-            targets = [p for p in people if p["name"] in f] or people
+            targets = [p for p in people if p["name"] in stem] or people
             log("TRIGGER %s (요청 v%d, 대상 %s)" % (memo_path, version, ",".join(p["name"] for p in targets)))
             work_dir = os.path.join(cfg.state_dir, "releases", "%s_%s" % (week, dt.datetime.now().strftime("%m%d-%H%M%S")))
             os.makedirs(work_dir, exist_ok=True)
