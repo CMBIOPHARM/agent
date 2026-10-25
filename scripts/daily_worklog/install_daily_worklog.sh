@@ -40,7 +40,11 @@ plutil -create xml1 "${plist}"
 plutil -insert Label -string "${label}" "${plist}"
 # Google Drive(~/Library/CloudStorage) 접근은 전체 디스크 접근 권한을 받은 실행기를 거친다.
 runner="${HOME}/Library/Application Support/CMBIOPHARM/bin/cmb-drive-runner"
-if [[ -x "${runner}" ]]; then
+materialize="${HOME}/Library/Application Support/CMBIOPHARM/bin/cmb-materialize"
+if [[ -x "${runner}" && -x "${materialize}" ]]; then
+  # cmb-materialize: 아직 내려받지 않은 Drive 파일도 열 수 있게 한다(없으면 EDEADLK).
+  plutil -insert ProgramArguments -json "[\"${runner}\",\"${materialize}\",\"/bin/bash\",\"${program}\"]" "${plist}"
+elif [[ -x "${runner}" ]]; then
   plutil -insert ProgramArguments -json "[\"${runner}\",\"/bin/bash\",\"${program}\"]" "${plist}"
 else
   echo "경고: ${runner} 없음. scripts/macos_runner/build_drive_runner.sh 후 권한을 주지 않으면 Drive 접근이 막힌다." >&2

@@ -49,6 +49,7 @@
 ## Mac launchd의 Google Drive 접근
 
 - launchd 작업은 권한 없이 `~/Library/CloudStorage`를 읽지 못한다. Drive를 쓰는 작업은 `scripts/macos_runner/build_drive_runner.sh`로 만든 `cmb-drive-runner`를 거쳐 실행하고, 이 실행기에만 전체 디스크 접근 권한을 준다.
+- 권한이 있어도 launchd 작업은 Drive가 아직 내려받지 않은 파일(다른 기기·웹에서 막 저장한 파일)을 열면 `Resource deadlock avoided`(EDEADLK)로 실패한다. 실행기 뒤에 `cmb-materialize`(같은 빌드 스크립트가 만듦, 권한 불필요)를 두어 내려받기를 허용한다: `cmb-drive-runner cmb-materialize /bin/bash 스크립트`.
 
 ## 역할 문서 필수 항목
 
