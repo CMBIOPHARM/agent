@@ -39,7 +39,7 @@ def log(msg):
 
 
 def read_memo(path):
-    raw = open(path, "rb").read()
+    raw = cw.read_bytes(path)  # Drive가 아직 내려받지 않은 파일이면 기다렸다 다시 읽는다
     for enc in ("utf-8-sig", "utf-16", "cp949"):
         try:
             if enc == "utf-16" and not raw.startswith((b"\xff\xfe", b"\xfe\xff")):
@@ -74,6 +74,7 @@ def latest_run_json(state_dir, week, name):
 
 
 def docx_text(path):
+    cw.read_bytes(path)
     res = subprocess.run(["/usr/bin/textutil", "-convert", "txt", "-stdout", path],
                          capture_output=True, text=True, timeout=120)
     return res.stdout.strip() if res.returncode == 0 else "(v0 문서 텍스트를 읽지 못함)"
@@ -175,7 +176,11 @@ def main():
             if ext.lower() not in MEMO_EXT or stem.endswith(RESULT_SUFFIX):
                 continue
             memo_path = os.path.join(folder, f)
-            text, digest = read_memo(memo_path)
+            try:
+                text, digest = read_memo(memo_path)
+            except OSError as e:
+                log("WARN 메모를 읽지 못함(다음 실행에서 다시 시도): %s (%s)" % (memo_path, e))
+                continue
             version = trigger_version(text)
             if version is None or state.get(memo_path) == digest:
                 continue
