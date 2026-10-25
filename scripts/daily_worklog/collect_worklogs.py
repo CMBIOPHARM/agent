@@ -6,11 +6,14 @@
 """
 import argparse
 import datetime as dt
+import errno
+import io
 import json
 import os
 import re
 import subprocess
 import sys
+import time
 import zipfile
 
 WEEKDAYS = "월화수목금토일"
@@ -39,7 +42,21 @@ def squeeze(text):
     return "\n".join(out).strip()
 
 
+def read_bytes(path, tries=6, wait=10):
+    """Drive 파일을 읽는다. 아직 내려받지 않은 파일은 launchd에서 EDEADLK(Resource deadlock avoided)가
+    나므로 Drive가 내려받을 때까지 잠시 기다렸다 다시 읽는다."""
+    for i in range(tries):
+        try:
+            with open(path, "rb") as fh:
+                return fh.read()
+        except OSError as e:
+            if e.errno not in (errno.EDEADLK, errno.EAGAIN, errno.ETIMEDOUT) or i == tries - 1:
+                raise
+            time.sleep(wait)
+
+
 def docx_text(path):
+    read_bytes(path)  # 내려받기 먼저(위 참고)
     res = subprocess.run(
         ["/usr/bin/textutil", "-convert", "txt", "-stdout", path],
         capture_output=True, text=True, timeout=120,
@@ -51,7 +68,7 @@ def docx_text(path):
 
 def hwpx_paragraphs(path):
     paras = []
-    with zipfile.ZipFile(path) as zf:
+    with zipfile.ZipFile(io.BytesIO(read_bytes(path))) as zf:
         sections = sorted(n for n in zf.namelist() if re.match(r"Contents/section\d+\.xml$", n))
         for name in sections:
             xml = zf.read(name).decode("utf-8", "replace")

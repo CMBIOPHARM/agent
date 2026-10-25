@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """주간 정리 입력 묶음을 사람별로 만든다.
 
-- 지난주 대표 완성본: 공유 드라이브 업무일지/주간_업무중점/<지난주 월요일>주/*_업무지시_<이름>_V<n>.pdf 중 최고 V (PDFKit로 텍스트 추출)
+- 지난주 대표 완성본: 공유 드라이브 업무일지/주간_업무중점/<지난주 월요일>주/*_업무지시_<이름>_V<n>.pdf 중 최고 V (PDFKit로 텍스트 추출).
+  PDF가 없으면 같은 폴더의 주간 정리 발행본 *_주간정리_<이름>_v<n>.docx 중 최고 v(대표 검토본)를 쓴다.
 - 지난주 업무일지: 월~토 원본(daily_worklog/collect_worklogs.py 재사용)
 - rnd 리포: 지난주 월요일 이후 main 커밋 목록과 바뀐 파일(모델이 리포에서 직접 읽을 목록)
 - 사내 카톡 백업: 대표가 매주 넣는 내보내기 파일(.txt/.csv/.zip)에서 지난주 월~일 대화만(이행 지시 추출용)
@@ -14,6 +15,7 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
 import zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "daily_worklog"))
@@ -46,9 +48,17 @@ def latest_directive(focus_root, week_monday, name):
         m = re.search(r"_업무지시_%s_V(\d+)\.pdf$" % re.escape(name), f)
         if m and int(m.group(1)) > best_v:
             best, best_v = f, int(m.group(1))
+    if best:
+        return best, pdf_text(os.path.join(folder, best))
+    # 대표 검토를 거친 주간 정리 vN의 '차주 권장 업무'가 그 주의 지시다.
+    for f in os.listdir(folder):
+        m = re.search(r"_주간정리_%s_v(\d+)\.docx$" % re.escape(name), unicodedata.normalize("NFC", f))
+        if m and int(m.group(1)) > best_v:
+            best, best_v = f, int(m.group(1))
     if not best:
         return None, None
-    return best, pdf_text(os.path.join(folder, best))
+    text = cw.docx_text(os.path.join(folder, best))
+    return best, "(주간 정리 발행본. 뒤쪽 '2. 차주 권장 업무 방향' 표의 각 행이 지난주 중점 항목이다)\n" + text
 
 
 def rnd_commits(rnd_dir, since):
@@ -139,7 +149,11 @@ def week_logs(raw_dir, person, monday):
     parts, written, missing = [], [], []
     for i in range(6):
         day = monday + dt.timedelta(days=i)
-        r = cw.collect_person(raw_dir, person, day)
+        try:
+            r = cw.collect_person(raw_dir, person, day)
+        except (OSError, zipfile.BadZipFile, RuntimeError) as e:
+            parts.append("### %s — 원본을 읽지 못함 (%s)" % (cw.kdate(day), e))
+            continue
         if r["status"] == "작성":
             written.append(cw.kdate(day))
             files = ", ".join("%s(수정 %s)" % (f["file"], f["modified"]) for f in r["files"])
