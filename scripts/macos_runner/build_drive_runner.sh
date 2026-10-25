@@ -7,12 +7,19 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 bin_dir="${HOME}/Library/Application Support/CMBIOPHARM/bin"
 target="${bin_dir}/cmb-drive-runner"
 
+mkdir -p "${bin_dir}"
+
+# cmb-materialize는 권한이 필요 없으므로 늘 다시 빌드한다(Drive 미내려받기 파일 열기, cmb_materialize.c 참고).
+xcrun clang -O2 -Wall -o "${bin_dir}/cmb-materialize.tmp" "${script_dir}/cmb_materialize.c"
+codesign --force --sign - --identifier com.cmbiopharm.materialize "${bin_dir}/cmb-materialize.tmp"
+mv "${bin_dir}/cmb-materialize.tmp" "${bin_dir}/cmb-materialize"
+echo "빌드 완료: ${bin_dir}/cmb-materialize"
+
 if [[ -x "${target}" && "${1:-}" != "--force" ]]; then
   echo "이미 있음: ${target} (다시 빌드하려면 --force, 이후 전체 디스크 접근 권한 재부여 필요)"
   exit 0
 fi
 
-mkdir -p "${bin_dir}"
 xcrun clang -O2 -Wall -o "${target}.tmp" "${script_dir}/cmb_drive_runner.c"
 codesign --force --sign - --identifier com.cmbiopharm.drive-runner "${target}.tmp"
 mv "${target}.tmp" "${target}"
