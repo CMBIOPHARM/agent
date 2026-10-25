@@ -118,7 +118,7 @@ def revise_one(cfg, week, folder, name, title, memo_text, work_dir, kakao=""):
     os.makedirs(share_dir, exist_ok=True)
     stem = "%s주_주간정리_%s" % (week, name)
     # 발행 번호를 미리 정해 머리 문구에 넣는다(publish_summary.py와 같은 규칙).
-    taken = {os.path.splitext(f)[0] for f in os.listdir(share_dir)}
+    taken = {os.path.splitext(unicodedata.normalize("NFC", f))[0] for f in os.listdir(share_dir)}
     n = 1
     while "%s_v%d" % (stem, n) in taken:
         n += 1
@@ -166,7 +166,7 @@ def main():
     cutoff = dt.date.today() - dt.timedelta(weeks=LOOKBACK_WEEKS)
 
     for entry in sorted(os.listdir(cfg.draft_dir)):
-        m = WEEK_DIR.match(entry)
+        m = WEEK_DIR.match(unicodedata.normalize("NFC", entry))  # 다른 도구가 만든 폴더는 이름이 NFD일 수 있다
         if not m or dt.date.fromisoformat(m.group(1)) < cutoff:
             continue
         week, folder = m.group(1), os.path.join(cfg.draft_dir, entry)

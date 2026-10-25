@@ -45,7 +45,7 @@ def latest_directive(focus_root, week_monday, name):
         return None, None
     best, best_v = None, -1
     for f in os.listdir(folder):
-        m = re.search(r"_업무지시_%s_V(\d+)\.pdf$" % re.escape(name), f)
+        m = re.search(r"_업무지시_%s_V(\d+)\.pdf$" % re.escape(name), unicodedata.normalize("NFC", f))
         if m and int(m.group(1)) > best_v:
             best, best_v = f, int(m.group(1))
     if best:

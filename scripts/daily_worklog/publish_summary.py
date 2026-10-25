@@ -13,6 +13,7 @@ import re
 import shutil
 import subprocess
 import sys
+import unicodedata
 
 CSS = """
 body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size: 11pt; line-height: 1.5; }
@@ -58,7 +59,8 @@ def md_to_html(md):
 
 
 def taken_stems(dest_dir):
-    return {os.path.splitext(f)[0] for f in os.listdir(dest_dir)}
+    # Drive에서 만든 파일은 이름이 NFD일 수 있다. 파일 시스템은 같은 이름으로 보므로 NFC로 맞춰 비교한다.
+    return {os.path.splitext(unicodedata.normalize("NFC", f))[0] for f in os.listdir(dest_dir)}
 
 
 def draft_name(dest_dir, stem):
