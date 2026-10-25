@@ -122,19 +122,13 @@ def build(data, name, title, prev_monday, next_monday, generated, label=DRAFT_LA
     for i, r in enumerate(data.get("back_rows") or [], 1):
         rows.append([(run(i, 10, True), None, "center"),
                      ([run(r.get("task", ""), 10, True), run(r.get("detail", ""), 9, color="404040")],),
-                     (run(r.get("basis", ""), 9, color="404040"),), (run(r.get("criteria", ""), 10),)])
-    x.append(table([500, 3700, 2500, 2800], ["#", "권장 업무", "근거 (지시·리포)", "완료 기준"], rows))
+                     (run(r.get("criteria", ""), 10),)])
+    # 근거 열과 참고란은 대표 지시(2026-10-25)로 문서에 싣지 않는다. JSON의 basis·notes·sources는 그대로 남긴다.
+    x.append(table([500, 5400, 3600], ["#", "권장 업무", "완료 기준"], rows))
     x.append(para(run("대표 결정 대기", 11, True), space_after=40, keep=True))
     x.append(bullets(data.get("decisions")))
     x.append(para(run("미룬 것", 11, True), space_after=40, keep=True))
     x.append(bullets(data.get("deferred")))
-    notes = list(data.get("notes") or [])
-    srcs = data.get("sources") or []
-    if srcs:
-        notes.append("읽은 리포 문서: " + ", ".join(srcs))
-    if notes:
-        x.append(para(run("참고", 9, True, "595959"), space_after=20))
-        x.extend(para(run(n, 8, color="595959"), space_after=20) for n in notes)
 
     sect = ('<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'
             '<w:pgMar w:top="1000" w:right="1000" w:bottom="1000" w:left="1000" w:header="500" w:footer="500" w:gutter="0"/>'
